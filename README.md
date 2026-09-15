@@ -288,10 +288,16 @@ responsible for whether it is right.
 ```
 solana-jupiter-trading-analysis/
 ├── README.md
+├── REPORT.md
 ├── images/
 │   ├── category_breakdown.png
+│   ├── category_over_time.png
+│   ├── dex_programs_table.png
 │   ├── fee_rate_by_category.png
-│   └── category_over_time.png
+│   ├── routing_complexity.png
+│   ├── top5_by_trade_count.png
+│   ├── top5_by_volume.png
+│   └── top5_dex_programs.png
 └── queries/
     ├── Q0_solana_dex_landscape.sql
     ├── C1_coverage_check.sql
@@ -317,3 +323,6 @@ solana-jupiter-trading-analysis/
 Each query file is self-contained: the header comments state purpose, scope,
 counting method and known caveats. The file contents are identical to what runs
 on Dune.
+
+**Detailed findings:** [REPORT.md](REPORT.md) — every result walked through with
+the charts, including what was found along the way and what would come next.
