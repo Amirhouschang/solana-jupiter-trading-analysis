@@ -3,9 +3,9 @@
 -- Note: same categorisation as Q5 (Q4 mapping + suffix rule).
 -- Note: percentages are within-week shares, so each week sums to 100%.
 --   This makes behavioural shifts visible independently of total market size.
--- Note: first and last week are partial — DATE_TRUNC('week') rounds to Monday,
---   so the period boundaries fall inside a week. Shares remain valid; absolute
---   counts for those two weeks are lower.
+-- Note: the period spans 27 weekly intervals; the first and last are partial.
+--   Their shares cover only the days included in H1 2026.
+-- Note: output tokens include intermediate routing tokens.
 WITH categories AS (
     SELECT * FROM query_8725347
 ),

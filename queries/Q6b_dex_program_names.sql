@@ -1,7 +1,7 @@
 -- Q6b: DEX program name mapping — top 20 programs by swap events, H1 2026
 -- Purpose: resolve Jupiter's routing targets from program addresses to names.
 -- Note: names taken from Solscan's public program labels, verified individually.
--- Note: covers the top 20 of 89 programs (~95% of swap events); the rest is
+-- Note: covers the top 20 of 89 programs (~93.65% of swap events); the rest is
 --   reported as 'Unmapped'.
 -- Note: of these 20, only Manifest carries Solscan's verified-program badge.
 SELECT dex_program, dex_name FROM (VALUES

@@ -69,9 +69,9 @@ into one axis.
 fewer swaps. The same six months of data, a different question, a different
 answer.
 
-### Why: average swap size
+### Why: average priced swap-event size
 
-| Token | Average swap |
+| Token | Average priced event |
 |---|---|
 | jlJupUSD | $16,657 |
 | CASH | $1,818 |
@@ -84,13 +84,19 @@ answer.
 | BONK | $50 |
 | RAY | $25 |
 
-This column separates two kinds of participant. jlJupUSD recorded only 6,013
-swaps in six months but averaged **$16,657 each** — that is not retail. At the
-other end, RAY averages $25 a swap across 592,794 of them.
+The spread is wide. jlJupUSD recorded only 6,013 swaps in six months but
+averaged **$16,657 each**. At the other end, RAY averages $25 across 592,794
+swaps. Three orders of magnitude between them, in the same venue, in the same
+six months. What kind of participant sits behind each is not something this data
+answers.
 
-Neither ranking is wrong. Trade count measures how many people are trading;
-volume measures how much money is behind it. A dashboard that shows only one of
-them tells a third of the story.
+This figure is computed per priced swap event, not per transaction. Where a
+transaction produced several events, each counts separately, so the value is a
+lower bound on the size of a full user order.
+
+Neither ranking is wrong. Trade count measures how frequently a token is traded;
+volume measures how much capital moved. A dashboard that shows only one of them
+tells a third of the story.
 
 ---
 
@@ -119,10 +125,19 @@ Three observations.
 **Stablecoins and native Solana assets are 77% of all activity.** The ecosystem
 that gets written about — meme coins, launchpads — is 11% of the trading.
 
-**Meme coins have more traders than stablecoins.** 4.8 million wallets against
-2.4 million, for a quarter of the activity. Combined with the average swap sizes
-above, the picture is many people trading small amounts, against fewer people
-moving large ones.
+One qualification on that figure: categories are assigned from the output token
+of each swap event, and a route A → SOL → B records SOL as an output alongside B.
+The shares therefore describe execution activity rather than what traders set out
+to acquire, and the stablecoin and native Solana figures are likely inflated by
+an amount this analysis does not measure.
+
+**Meme coins reach more distinct wallets than stablecoins.** The manually
+verified meme coin group alone records 3.4 million distinct signers against 2.4
+million for stablecoins, for a fifth of the activity. The suffix-matched group
+adds a further 1.4 million, but the two groups may overlap, so they are not
+summed here. Combined with the event sizes above, the pattern is many addresses
+trading small amounts against fewer addresses moving large ones. Distinct signers
+are wallet addresses, not necessarily distinct people.
 
 **Meme coins reach far fewer venues.** 23 and 34 DEX programs, against 75 for
 stablecoins. That number turns out to explain the routing result in section 5.
@@ -174,8 +189,9 @@ Both matter to Jupiter, for opposite reasons. One provides depth, the other
 provides coverage.
 
 One caveat worth stating: of these top 20 programs, only Manifest carries a
-verified-program badge on Solscan. The rest move billions unverified. The names
-in this table come from public labels, not from cryptographic verification.
+verified-program badge on Solscan. A missing badge means the program's source
+has not been published for verification there — it is not in itself a security
+assessment. The names in this table come from Solscan's public labels.
 
 ---
 
@@ -185,8 +201,14 @@ This metric did not come from the data. It came from a trade: a single wrapped
 BTC purchase where Jupiter pulled the token from three separate pools. One
 action for the user, three events on chain.
 
-Formalised: **swap events per user swap, by category.** The expectation was that
-meme coins, with scattered liquidity, would force more splitting.
+Formalised: **swap events per transaction, by category.** Each transaction is
+assigned to one category — the one with the most swap events in it, ties broken
+alphabetically — and only the events of that category are counted. The figure is
+therefore events within the dominant category per transaction, not the full leg
+count of every transaction.
+
+The expectation was that meme coins, with scattered liquidity, would force more
+splitting.
 
 ![Routing complexity](images/routing_complexity.png)
 
@@ -204,14 +226,20 @@ meme coins, with scattered liquidity, would force more splitting.
 The result is the opposite of the hypothesis. Stablecoins split the most, meme
 coins the least.
 
-The explanation is in section 4. Stablecoins trade across 75 of the 89 programs,
-so Jupiter has somewhere to split an order to — and does, because splitting gets
-a better price. Meme coins often live in a single pool. There is nothing to
-split.
+Section 4 offers a possible explanation. Stablecoins appear across 75 of the 89
+DEX programs, meme coins across 23 to 34. Note that these are programs, not
+individual pools — pool-level detail is not available in this table.
 
-**The metric measures available routing options, not liquidity fragmentation.**
-That is a different thing than what it was designed to measure, and finding out
-was more useful than a confirmation would have been.
+One hypothesis for this is that where more venues exist, Jupiter has more to
+split across, and splitting can yield a better price. The data here is
+consistent with that but does not establish it — unused routing options are not
+observable in this dataset, and the query examines neither route ordering nor
+whether a split improved execution.
+
+What can be said is narrower: transactions assigned to the stablecoin category
+carry more swap events within that category than transactions assigned to meme
+coins. The metric was designed to measure liquidity fragmentation and does not
+do that.
 
 A note on how this was caught: the first version of the query returned 0.95 legs
 per swap for one category. That is mathematically impossible — the minimum is
@@ -222,43 +250,76 @@ coin gap widened from 1.30 vs 1.02 to 1.55 vs 1.03.
 
 ---
 
-## 6. What it costs
+## 6. What it costs — read the coverage first
 
 Absolute fees follow category size, so they compare nothing. Fee per dollar of
-volume does.
+volume does — but only within a limit that has to be stated before the numbers.
 
-![Protocol fee rate by category](images/fee_rate_by_category.png)
+**Jupiter does not record a fee event on every route.** The share of transactions
+that carry one varies sharply by category:
 
-| Category | Fee rate (bps) | Total fees | Volume |
+| Category | Transactions | With fee event | Coverage |
 |---|---|---|---|
-| Unmapped | 0.626 | $13,678 | $219M |
-| **Meme Coin** | **0.515** | $51,189 | $994M |
-| Stablecoin | 0.081 | $932,589 | $115.8bn |
-| Native Solana | 0.064 | $509,259 | $79.0bn |
-| Liquid Staking | 0.046 | $4,014 | $868M |
-| Tokenized RWA | 0.026 | $579 | $224M |
-| Cross-Chain Asset | 0.012 | $4,680 | $3.76bn |
+| Native Solana | 118,460,887 | 9,385,313 | 7.92% |
+| Liquid Staking | 3,370,006 | 78,233 | 2.32% |
+| Unmapped | 16,355,364 | 253,016 | 1.55% |
+| Tokenized RWA | 573,675 | 8,847 | 1.54% |
+| Stablecoin | 68,525,537 | 930,935 | 1.36% |
+| Meme Coin | 46,677,517 | 302,363 | 0.65% |
+| Cross-Chain Asset | 13,425,990 | 68,801 | 0.51% |
+| Other | 173,100 | 0 | 0% |
 
-**Meme coin trading costs 6.4× more than stablecoin trading and 41× more than
-cross-chain assets**, relative to capital moved.
+A factor of fifteen between the widest and narrowest coverage. Everything below
+is computed on those subsets.
 
-The asymmetry is clearest in the raw figures. Cross-chain assets moved $3.76bn
-and paid $4,680 in protocol fees. Meme coins moved $994m — a quarter of the
-capital — and paid $51,189, eleven times as much.
+![Recorded fee rate by category](images/fee_rate_by_category.png)
 
-Put differently: on a $90 meme coin swap, the protocol fee is a materially
-larger share of the trade than on a $651 stablecoin swap. Small trades in thin
-markets are expensive, and the cost lands on the participants least able to
-absorb it.
+| Category | Fee rate (bps) | Total fees | Volume | Transactions |
+|---|---|---|---|---|
+| Unmapped | 39.00 | $36,273 | $9.3M | 19,278 |
+| **Meme Coin** | **37.73** | $113,433 | $30.1M | 146,437 |
+| Native Solana | 32.01 | $602,461 | $188.2M | 9,304,745 |
+| Tokenized RWA | 30.71 | $536 | $174,612 | 6,581 |
+| Stablecoin | 23.13 | $602,866 | $260.6M | 916,364 |
+| Liquid Staking | 12.48 | $8,802 | $7.1M | 41,148 |
+| Cross-Chain Asset | 10.82 | $15,895 | $14.7M | 64,656 |
 
-`Unmapped` shows the highest rate of all, at 0.626 bps. It holds long-tail
-tokens the suffix rule does not catch, which are likely to include further meme
-coins. The true meme coin figure is therefore probably higher than 0.515.
+Among transactions where a fee was recorded, meme coins show the highest rate of
+the classified categories at 37.7 basis points, against 23.1 for stablecoins and
+10.8 for cross-chain assets. That is a factor of 1.6 and 3.5 respectively.
 
-Two limits on this section. This is Jupiter's own protocol fee only — Solana
-network fees are a separate cost and are not combined with it. And Jupiter does
-not charge a protocol fee on every route, so fee event counts are not comparable
-to swap counts elsewhere in this report.
+**What this does and does not say.** It says that on the covered transactions,
+the fee rate differs by category in that direction. It does not say that trading
+meme coins costs 1.6× more than trading stablecoins — for that, the covered
+subset would have to be representative of each category, and representative to a
+similar degree across categories. With coverage ranging from 0.65% to 7.92%,
+neither can be established from this data.
+
+The ranking is an observation about recorded fee events. It is not a measured
+cost of trading.
+
+### How this section was rebuilt
+
+The first version of this query was wrong in a way that was not visible in the
+output. It categorised fees by the fee token and volume by the output token,
+independently, then joined the two on category name alone.
+
+A check revealed that those two categorisations disagree in roughly three
+quarters of cases. The single largest group was *fee paid in a stablecoin on a
+SOL purchase* — 137,033 pairs in a one-day sample, against 33,882 where both
+sides agreed. Jupiter charges the fee in the input or output token depending on
+swap type, so a meme coin purchase routinely produces a fee denominated in USDC.
+
+The consequence: the stablecoin fee figure was largely composed of fees from
+native Solana trades. The ratio described nothing coherent.
+
+The rebuilt version assigns each transaction to one category — the one with the
+most swap events in it, as in Q7 — and counts both its fees and its volume
+towards that category. The numbers changed substantially. The gap between meme
+coins and stablecoins narrowed from a factor of 6.4 to 1.6.
+
+Both the error and the correction are in the repository. The earlier figures
+should not be cited.
 
 ---
 
@@ -266,24 +327,19 @@ to swap counts elsewhere in this report.
 
 ![Category composition over time](images/category_over_time.png)
 
-Weekly shares across twenty-six weeks:
+Weekly shares across H1 2026:
 
-| Category | Range |
-|---|---|
-| Stablecoin | 38–42% |
-| Native Solana | 36–37% |
-| Meme Coin | 10–12% |
-| Unmapped | 5–7% |
-| Cross-Chain Asset | 4–5% |
-
-The bands run almost flat. Whatever the market did between January and June, the
-composition of what people traded barely moved.
+The bands run close to flat. Stablecoins and native Solana assets together hold
+roughly three quarters of activity in every week of the period, and no category
+changes rank. Individual weeks do move — the chart shows visible dips and
+recoveries — so the stability is in the overall structure rather than in each
+week's exact share.
 
 This is the least dramatic chart in the project and possibly the most
-interesting one. A stable mix across six months suggests the composition is
-closer to a structural property of the ecosystem than a response to market
-conditions. Different people trade different things for different reasons, and
-those proportions hold.
+interesting one. A mix that holds across six months of market movement is at
+least consistent with the composition being a structural feature rather than a
+response to conditions, though six months is not long enough to distinguish the
+two.
 
 Testing that properly would require a longer window — it is the obvious next
 step for this analysis.
@@ -326,7 +382,7 @@ Mint `Es9vdPD6sXzHhbAskU19WFnAtyRo94HKrGrPSdQ3aSSB` carries the name "USD Tether
 and the symbol "USDT". The real USDT is `Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB`.
 Both start with `Es9v`.
 
-What the checks showed: unverified on Solscan, created five months before the
+What the checks showed: unverified on Solscan, created in January 2026, five months before the
 period ended, 3.49bn supply across only **928 holders**, no working price feed.
 It recorded 182,595 swaps. Then a single sell took the price from $1.00 to
 $0.0008 within minutes. Its 24-hour volume at time of checking was $1.56.
@@ -356,6 +412,13 @@ symbol-based classification would have counted it as a stablecoin and added
 - **The same question on Ethereum.** Different data model, same structure. A
   comparison would show whether these proportions are a Solana property or a DEX
   property.
+- **Understanding the fee event coverage.** Section 6 rests on 0.5 to 8 percent
+  of transactions depending on category. Establishing why some routes record a
+  fee event and others do not would turn that section from an observation into a
+  measurement.
+- **Separating final outputs from intermediate hops.** That would turn the
+  category shares from a picture of execution activity into a picture of trading
+  intent.
 
 ---
 
@@ -373,6 +436,10 @@ most when reading this report:
   Someone else could draw the boundaries differently and get different numbers.
 - **Wash trading and bots** are real on DEXes and cannot be fully filtered. Trade
   counts, particularly for meme coins, are inflated by an unknown amount.
+- **Fee event coverage is narrow and uneven** — 0.51% to 7.92% depending on
+  category. Section 6 is computed on that subset only.
+- **Intermediate hops count as outputs.** Category shares in sections 2 and 3
+  describe execution activity, not final trading intent.
 
 The analysis describes trading behaviour, not its causes. No causal claims.
 Not investment advice.

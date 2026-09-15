@@ -8,7 +8,7 @@
 -- Note: categorised on output_mint only — the token being bought.
 -- Note: a transaction touching several categories is counted once in each.
 --   Summing user_swaps or traders across categories therefore exceeds the
---   total from Q1 — by design, since both sides of a swap are real activity.
+--   total from Q1 — by design, because output events can touch several categories.
 --   pct_of_swap_events is unaffected: it uses exact event counts.
 -- Note: approx_distinct used for user_swaps, traders and dex_programs.
 --   Roughly 2% error; exact counts time out at 465M rows.

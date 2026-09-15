@@ -6,6 +6,6 @@ SELECT
     user_swaps,
     swap_events
 FROM query_8724549
-ORDER BY swap_events DESC
+ORDER BY user_swaps DESC, symbol
 OFFSET 5
 LIMIT 10

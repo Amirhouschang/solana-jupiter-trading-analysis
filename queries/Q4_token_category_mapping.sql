@@ -1,6 +1,7 @@
 -- Q4: Token category mapping — 105 tokens, H1 2026
 -- Scope: top 100 by trade count (88% of swap events, see C1) plus 5 tokens
---   surfaced by the volume ranking in Q3. Everything else falls to 'Other'.
+--   surfaced by the volume ranking in Q3. Downstream queries apply suffix rules
+--   to unmatched tokens and otherwise label them 'Unmapped'.
 -- Categories are an analytical judgement, not an official taxonomy.
 --
 -- RULES USED
@@ -8,7 +9,7 @@
 -- Liquid Staking    staked SOL derivatives — held for yield, traded rarely
 -- Stablecoin        fiat-pegged, incl. yield-bearing variants
 -- Cross-Chain Asset assets originating on another chain (wrapped or bridged)
--- Meme Coin         no utility claim; includes all pump.fun / bonk launches
+-- Meme Coin         manually assigned tokens plus unmatched pump/bonk suffix tokens
 -- Tokenized RWA     real-world assets: equities and commodities
 -- Other             unclear, unverifiable, or not a genuine project
 --
@@ -22,7 +23,7 @@
 -- NOTE: mint Es9vdPD6sXzHhbAskU19WFnAtyRo94HKrGrPSdQ3aSSB is named 'USD Tether'
 -- with symbol 'USDT', but is NOT the real USDT
 -- (Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB). Unverified, created 5 months
--- ago, 3.49B supply across only 928 holders, no price feed. 182,595 swaps in
+-- ago, 3.49B supply across only 928 holders, no price feed. 173,258 swap events in
 -- the period, then a single sell took the price from 1.00 to 0.0008 within
 -- minutes. 24h volume 1.56 USD. Classified as Other, flagged 'impostor'.
 --

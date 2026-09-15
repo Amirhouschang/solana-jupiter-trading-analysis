@@ -1,7 +1,7 @@
 -- Q7: Routing complexity by token category, H1 2026
--- Purpose: measure how many DEX legs Jupiter uses per user swap, by category.
+-- Purpose: measure dominant-category swap events per transaction.
 -- Note: complexity is assigned per transaction, not per event. Each transaction
---   is counted once, under the category of its most-traded output token.
+--   is counted once, under the category with the most swap events; ties are broken alphabetically.
 --   The earlier per-event version double-counted multi-token transactions.
 -- Note: exact counts throughout — no approx_distinct needed at this grain.
 -- Note: swap_events counts only the legs of the dominant category, so the sum

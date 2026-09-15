@@ -8,8 +8,7 @@
 -- Note: price coverage is uneven. Liquid Staking 100%, Native Solana 89%,
 --   Stablecoin 82%, Cross-Chain and RWA 67%, Meme Coin only 24%. Tokens without
 --   a price row are excluded, so meme coin volume is understated here.
--- Note: daily closing price, not the price at execution time. Acceptable for
---   ranking, not for precise valuation.
+-- Note: valuations use Dune daily prices, not execution-time prices.
 WITH priced_swaps AS (
     SELECT
         s.output_mint                                       AS token_mint,

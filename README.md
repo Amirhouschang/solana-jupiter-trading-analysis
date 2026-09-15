@@ -25,13 +25,14 @@ observation point for trading behaviour across the ecosystem rather than one ven
 |---|---|---|
 | Number of swaps | SOL — 153.9M | USDC — 120.7M |
 | USD volume | **USDC — $82.9bn** | SOL — $76.1bn |
-| Fee per dollar moved | **Meme Coin — 0.515 bps** | Stablecoin — 0.081 bps |
+| Recorded fee rate | **Meme Coin — 37.7 bps** | Stablecoin — 23.1 bps |
 
 ![Protocol fee rate by category](images/fee_rate_by_category.png)
 
-*Protocol fee paid per dollar of volume traded. Meme coin trading costs 6.4× more
-than stablecoin trading and 41× more than cross-chain assets, relative to capital
-moved.*
+*Fee paid per dollar of volume, among transactions where a Jupiter fee event was
+recorded. Coverage of that subset ranges from 0.51% to 7.92% depending on
+category, so the ranking describes recorded fee events rather than the measured
+cost of trading each category.*
 
 Same six months, three different answers. Any dashboard that picks one of them
 tells a third of the story.
@@ -206,6 +207,7 @@ categories, the treatment is stated per query.
 |---|---|---|
 | Q0 | Solana DEX Landscape | Context; establishes Jupiter's absence |
 | C1 | Coverage Check | Justifies the top-100 scope |
+| C2 | Fee Event Coverage | Establishes the subset Q8 is computed on |
 | Q1 | Baseline Metrics | Headline figures |
 | Q2 | Top Tokens by Trade Count | Ranking by activity |
 | Q3 | Top Tokens by USD Volume | Ranking by capital |
@@ -214,7 +216,7 @@ categories, the treatment is stated per query.
 | Q6 | DEX Program Usage | Execution venues |
 | Q6b | DEX Program Names | Dimension table, 20 programs |
 | Q7 | Routing Complexity by Category | DEX legs per swap |
-| Q8 | Protocol Fee Efficiency | Cost per dollar moved |
+| Q8 | Recorded Fee Rate | Fee per dollar moved, on covered transactions |
 | Q9 | Category Composition Over Time | Weekly shares |
 
 Chart variants (Q2a/b, Q3a/b, Q5a, Q6c/e) exist because the distributions are too
@@ -236,10 +238,21 @@ skewed for a single readable chart. They add no logic of their own.
   coins**. Meme coin volume and fees are understated throughout.
 - Prices are daily closes, not execution-time prices. Adequate for ranking, not
   for precise valuation.
-- Protocol fees and Solana network fees are separate costs. Only the protocol fee
-  is analysed here; the two are never combined.
-- Jupiter does not charge a protocol fee on every route, so fee event counts are
-  not comparable to swap counts.
+- **Intermediate hops are counted as outputs.** A route A → SOL → B records SOL
+  as an output alongside B. Category shares therefore describe execution
+  activity, not what traders set out to acquire. Stablecoin and native Solana
+  shares are likely inflated by this, by an amount not measured here.
+- **Fee event coverage is narrow and uneven.** Jupiter does not record a fee
+  event on every route. The share of transactions carrying one ranges from 7.92%
+  (Native Solana) to 0.51% (Cross-Chain Asset), with none at all for Other — see
+  C2. Q8 therefore describes recorded fee events, not the cost of trading a
+  category. Whether the covered subset is representative cannot be established
+  from this data.
+- Fees recorded in `jupiter_evt_feeevent` are referred to here as recorded fee
+  events. Who ultimately receives them is not established by this analysis.
+- Solana network fees are a separate cost and are not analysed here. The two are
+  never combined.
+- `avg_size_usd` in Q3 is computed per priced swap event, not per transaction.
 - Of the top 20 DEX programs, only Manifest carries a verified-program badge on
   Solscan. Names come from public labels.
 - Wash trading and bot activity are real on DEXes and cannot be fully filtered.
@@ -301,6 +314,7 @@ solana-jupiter-trading-analysis/
 └── queries/
     ├── Q0_solana_dex_landscape.sql
     ├── C1_coverage_check.sql
+    ├── C2_fee_event_coverage.sql
     ├── Q1_baseline_metrics.sql
     ├── Q2_top_tokens_by_trade_count.sql
     ├── Q2a_top5_by_trade_count.sql
@@ -316,7 +330,7 @@ solana-jupiter-trading-analysis/
     ├── Q6c_top5_dex_programs.sql
     ├── Q6e_dex_programs_table.sql
     ├── Q7_routing_complexity.sql
-    ├── Q8_protocol_fee_efficiency.sql
+    ├── Q8_recorded_fee_rate.sql
     └── Q9_category_composition_over_time.sql
 ```
 
