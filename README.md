@@ -7,6 +7,13 @@ the Solana DEX ecosystem. Built with SQL on Dune Analytics.
 **Period:** 1 January – 30 June 2026
 **Data:** `jupiter_v6_solana.*`, `prices.day`, `tokens_solana.fungible` on Dune
 
+## In short
+
+- **465M swap events in 268M transactions** routed through Jupiter v6 across 89 DEX programs in H1 2026.
+- **SOL leads by transactions, USDC by priced volume** — trade count and volume produce different leaders.
+- **Stablecoins and native Solana assets are 77.5% of all swap events**; meme coins are 11.0%.
+- **Stablecoin transactions carry more events than meme coin transactions** (1.55 vs 1.03 within the dominant category), the opposite of the initial hypothesis.
+
 ---
 
 ## The question
