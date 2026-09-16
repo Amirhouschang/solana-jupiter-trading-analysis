@@ -1,8 +1,10 @@
 -- Q2: Top tokens by trade count with symbols, H1 2026
 -- Scope: top 100 tokens (88% of all swap events, see C1).
 -- user_swaps = distinct transactions; swap_events = raw rows.
---   One user swap can hit several DEX programs (1.74 avg, see Q1).
--- approx_distinct used — exact counts time out at 465M rows.
+--   One transaction can contain several swap events (1.74 events per
+--   transaction on average, see Q1).
+-- approx_distinct used — exact counts time out at 465M rows. The estimate can
+--   exceed the exact swap_events (e.g. HYPE, JUP); rank by swap_events.
 -- LEFT JOIN on token_mint_address; many tokens have no metadata row.
 WITH top_tokens AS (
     SELECT

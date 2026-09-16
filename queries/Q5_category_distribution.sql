@@ -11,7 +11,8 @@
 --   total from Q1 — by design, because output events can touch several categories.
 --   pct_of_swap_events is unaffected: it uses exact event counts.
 -- Note: approx_distinct used for user_swaps, traders and dex_programs.
---   Roughly 2% error; exact counts time out at 465M rows.
+--   Roughly 2% error; exact counts time out at 465M rows. At small counts the
+--   estimate can exceed the exact event count (Other: 182,595 vs 173,258).
 -- Note: Meme Coin appears twice, split by mapping_method. Combined share is
 --   ~11.0% of swap events. Charts should aggregate the two rows.
 WITH categories AS (

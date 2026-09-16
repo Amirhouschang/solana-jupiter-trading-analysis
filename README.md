@@ -11,7 +11,7 @@ the Solana DEX ecosystem. Built with SQL on Dune Analytics.
 
 ## The question
 
-> What is actually traded through Jupiter — how is it executed, and what does it cost?
+> What is actually traded through Jupiter, how is it executed, and what fees are recorded?
 
 Jupiter is not an exchange. It holds no liquidity of its own; it finds the best
 path for a swap across the underlying AMM programs. That makes it a single
@@ -19,23 +19,26 @@ observation point for trading behaviour across the ecosystem rather than one ven
 
 ## The finding
 
-**Trade count, volume and cost produce three different rankings.**
+**Trade count, volume and recorded fees produce three different rankings.**
 
 | Ranked by | Leader | Runner-up |
 |---|---|---|
-| Number of swaps | SOL — 153.9M | USDC — 120.7M |
-| USD volume | **USDC — $82.9bn** | SOL — $76.1bn |
-| Recorded fee rate | **Meme Coin — 37.7 bps** | Stablecoin — 23.1 bps |
+| Estimated transactions per output token | SOL — 153.9M | USDC — 120.7M |
+| Priced swap-event output volume | **USDC — $82.9bn** | SOL — $76.1bn |
+| Recorded fee ratio (classified categories) | **Meme Coin — 37.7 bps** | Native Solana — 32.0 bps |
 
-![Protocol fee rate by category](images/fee_rate_by_category.png)
+*Unmapped is higher overall at 39.0 bps.*
 
-*Fee paid per dollar of volume, among transactions where a Jupiter fee event was
-recorded. Coverage of that subset ranges from 0.51% to 7.92% depending on
-category, so the ranking describes recorded fee events rather than the measured
+![Recorded fee ratio by category](images/fee_rate_by_category.png)
+
+*Recorded fees divided by priced swap-event output volume, on transactions with
+at least one priced fee event and one priced swap event. These transactions are
+0.12%–7.85% of each category's transactions (fee-event coverage in C2:
+0.51%–7.92%), so the ranking describes recorded fee events, not the measured
 cost of trading each category.*
 
 Same six months, three different answers. Any dashboard that picks one of them
-tells a third of the story.
+shows only part of the story.
 
 ![Category breakdown](images/category_breakdown.png)
 
@@ -45,13 +48,18 @@ for meme coins are individually verified.*
 
 Two results were not expected:
 
-- **Routing complexity is highest for stablecoins, not meme coins.** The initial
-  hypothesis was the opposite. Stablecoins trade across 75 of the 89 DEX programs,
-  so Jupiter has somewhere to split an order to — and does, to get a better price.
-  Meme coins often live in a single pool; there is nothing to split.
-- **The composition of trading barely moved across six months.** Stablecoins held
-  38–42%, native Solana assets 36–37%, meme coins 10–12%, week after week. That
-  looks closer to a structural property of the ecosystem than a reaction to
+- **Stablecoin transactions carry the most events, meme coin transactions
+  almost the fewest.** Transactions assigned to stablecoins average 1.55 events
+  within their dominant category, meme coins 1.03. The initial hypothesis
+  expected the opposite. Stablecoin outputs appear on about 75 of the 89 DEX
+  programs, meme coin outputs on about 23–34. Whether that explains the gap, or
+  whether orders are actually split for a better price, is not established by
+  this data.
+- **The two largest categories stayed dominant, but shares moved.**
+  Stablecoins and native Solana assets together held 71.0–80.1% of weekly swap
+  events. Individually: stablecoins 33.6–42.7%, native Solana 35.8–44.6%, meme
+  coins 7.5–17.4% (C3). Native Solana ranked above stablecoins in 9 of 27 weeks.
+  Six months is too short to tell a structural pattern from a reaction to
   market conditions.
 
 ![Category composition over time](images/category_over_time.png)
@@ -66,8 +74,8 @@ behaviour are visible independently of changes in overall market size.*
 | Metric | H1 2026 |
 |---|---|
 | Swap events | 465,238,625 |
-| Distinct user swaps | 267,562,076 |
-| Distinct traders | 7,970,524 |
+| Distinct transactions | 267,562,076 |
+| Distinct signers | 7,970,524 |
 | DEX programs used | 89 |
 | Distinct output tokens | 1,074,350 |
 
@@ -107,9 +115,9 @@ Four problems surfaced, each costing time:
   silently return zero. The first version of Q1 reported 0 distinct tokens
   because of this.
 - **`amm` is a program, not a pool.** The first assumption was that it identified
-  individual liquidity pools. A check comparing swap counts to distinct tokens
-  per address showed 89 values with thousands of tokens each — DEX programs. Two
-  planned queries had to be rewritten.
+  individual liquidity pools. A check of distinct output tokens per address
+  showed only 89 values, some serving tens or hundreds of thousands of tokens
+  — DEX programs, not pools. Two planned queries had to be rewritten.
 - **No USD values.** Amounts are raw integers in token units. Volume required
   `/ POWER(10, decimals)` plus a price join.
 - **Different address formats.** `prices.day` stores Solana mints as bytes while
@@ -133,8 +141,9 @@ symbol "USDT" — but it is not USDT. The real one is `Es9vMFrza...`; both begin
 with `Es9v`.
 
 Checks on Solscan: unverified, created five months earlier, 3.49bn supply across
-only 928 holders, no working price feed. It recorded 182,595 swaps, then a single
-sell took the price from $1.00 to $0.0008 within minutes. 24h volume: $1.56.
+only 928 holders, no working price feed. It recorded 173,258 swap events in
+173,100 transactions, then a single sell took the price from $1.00 to $0.0008
+within minutes. 24h volume at time of checking: $1.56.
 
 It is classified `Other` and carries `flag = 'impostor'` — kept in the dataset so
 it can be reported, excluded from stablecoin figures so it cannot distort them.
@@ -149,7 +158,7 @@ A coverage check (C1) settled it: the top 100 tokens cover **88.1%** of all swap
 events, the top 500 only **91.9%**. Four hundred more tokens for 3.8 percentage
 points is not worth the manual effort. Beyond the top 100, launchpad tokens are
 caught by mint suffix (`pump`, `bonk`), and everything remaining is reported as
-`Unmapped` — 6.0% of events, visible rather than hidden.
+`Unmapped` — 5.9% of events, visible rather than hidden.
 
 A `mapping_method` column distinguishes manually verified rows from rule-based
 ones, so the share of the classification that was actually checked is visible.
@@ -173,9 +182,10 @@ The routing complexity measure (Q7) did not come from the tables. It came from a
 wrapped BTC purchase where Jupiter had pulled the token from three separate
 pools — one action for the user, three events on chain.
 
-That observation became a metric: swap events per user swap, broken down by
-category. It is the part of this project least likely to appear in a tutorial,
-and the hypothesis behind it turned out to be wrong, which made it more
+That observation became a metric: swap events per transaction within the
+dominant category. It is the part of this project least likely to appear in a
+tutorial. The result did not support the hypothesis behind it, and the metric
+turned out not to measure liquidity fragmentation directly, which made it more
 interesting rather than less.
 
 ---
@@ -207,7 +217,8 @@ categories, the treatment is stated per query.
 |---|---|---|
 | Q0 | Solana DEX Landscape | Context; establishes Jupiter's absence |
 | C1 | Coverage Check | Justifies the top-100 scope |
-| C2 | Fee Event Coverage | Establishes the subset Q8 is computed on |
+| C2 | Fee Event Coverage | Fee-event coverage per category (Q8 uses a smaller priced subset) |
+| C3 | Weekly Range | Min/max weekly share per category, from Q9 |
 | Q1 | Baseline Metrics | Headline figures |
 | Q2 | Top Tokens by Trade Count | Ranking by activity |
 | Q3 | Top Tokens by USD Volume | Ranking by capital |
@@ -215,8 +226,8 @@ categories, the treatment is stated per query.
 | Q5 | Category Distribution | Share of activity per category |
 | Q6 | DEX Program Usage | Execution venues |
 | Q6b | DEX Program Names | Dimension table, 20 programs |
-| Q7 | Routing Complexity by Category | DEX legs per swap |
-| Q8 | Recorded Fee Rate | Fee per dollar moved, on covered transactions |
+| Q7 | Routing Complexity by Category | Dominant-category events per transaction |
+| Q8 | Recorded Fee Rate | Recorded fees / priced event-output volume, on a priced subset |
 | Q9 | Category Composition Over Time | Weekly shares |
 
 Chart variants (Q2a/b, Q3a/b, Q5a, Q6c/e) exist because the distributions are too
@@ -231,8 +242,9 @@ skewed for a single readable chart. They add no logic of their own.
   the aggregator is itself a filter on what is observed.
 - Categorisation is an analytical judgement, not an official taxonomy. It is
   published as Q4 and can be checked line by line.
-- `Unmapped` covers 6.0% of swap events and is always reported.
-- `approx_distinct()` is used where exact counts time out. Roughly 2% error.
+- `Unmapped` covers 5.9% of swap events and is always reported.
+- `approx_distinct()` is used where exact counts time out. Roughly 2% error; at
+  small counts an estimate can exceed the exact event count.
 - **Price coverage is uneven:** 100% for liquid staking, 89% for native Solana,
   82% for stablecoins, 67% for cross-chain and RWA, but only **24% for meme
   coins**. Meme coin volume and fees are understated throughout.
@@ -245,7 +257,7 @@ skewed for a single readable chart. They add no logic of their own.
 - **Fee event coverage is narrow and uneven.** Jupiter does not record a fee
   event on every route. The share of transactions carrying one ranges from 7.92%
   (Native Solana) to 0.51% (Cross-Chain Asset), with none at all for Other — see
-  C2. Q8 therefore describes recorded fee events, not the cost of trading a
+  C2. After pricing filters, Q8 uses 0.12%–7.85% of transactions. Q8 therefore describes recorded fee events, not the cost of trading a
   category. Whether the covered subset is representative cannot be established
   from this data.
 - Fees recorded in `jupiter_evt_feeevent` are referred to here as recorded fee
@@ -315,6 +327,7 @@ solana-jupiter-trading-analysis/
     ├── Q0_solana_dex_landscape.sql
     ├── C1_coverage_check.sql
     ├── C2_fee_event_coverage.sql
+    ├── C3_weekly_range.sql
     ├── Q1_baseline_metrics.sql
     ├── Q2_top_tokens_by_trade_count.sql
     ├── Q2a_top5_by_trade_count.sql
@@ -337,6 +350,9 @@ solana-jupiter-trading-analysis/
 Each query file is self-contained: the header comments state purpose, scope,
 counting method and known caveats. The file contents are identical to what runs
 on Dune.
+
+The CSV exports of the query results are in the repository alongside the
+queries.
 
 **Detailed findings:** [REPORT.md](REPORT.md) — every result walked through with
 the charts, including what was found along the way and what would come next.

@@ -18,13 +18,16 @@
 -- Flagged rows stay in the dataset; the flag lets them be excluded or reported
 -- separately rather than silently dropped.
 --
+-- NOTE: SPX (SPX6900, Wormhole) originates on Ethereum but is classified as
+-- Meme Coin: for meme tokens, the meme category takes precedence over origin.
+--
 -- NOTE: WSOL is classified as Native Solana, not Cross-Chain. It is the wrapped
 -- form of SOL for SPL compatibility, not a bridged asset.
 -- NOTE: mint Es9vdPD6sXzHhbAskU19WFnAtyRo94HKrGrPSdQ3aSSB is named 'USD Tether'
 -- with symbol 'USDT', but is NOT the real USDT
--- (Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB). Unverified, created 5 months
--- ago, 3.49B supply across only 928 holders, no price feed. 173,258 swap events in
--- the period, then a single sell took the price from 1.00 to 0.0008 within
+-- (Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB). Unverified, created in
+-- January 2026, 3.49B supply across only 928 holders, no price feed. 173,258 swap events
+-- (173,100 transactions) in the period, then a single sell took the price from 1.00 to 0.0008 within
 -- minutes. 24h volume 1.56 USD. Classified as Other, flagged 'impostor'.
 --
 -- NOTE: metadata in tokens_solana.fungible is unreliable in two ways. Some rows

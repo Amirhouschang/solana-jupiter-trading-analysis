@@ -1,6 +1,8 @@
 -- Q3: Top tokens by USD volume, H1 2026
--- Purpose: rank tokens by capital moved, to contrast with the trade-count
---   ranking in Q2. The two rankings answer different questions.
+-- Purpose: rank tokens by priced swap-event output volume, to contrast with the
+--   trade-count ranking in Q2. The two rankings answer different questions.
+-- Note: every output event counts, including intermediate hops (A -> SOL -> B
+--   counts SOL and B). This is execution volume, not final user-order value.
 -- Method: output_amount is a raw integer; divided by 10^decimals and multiplied
 --   by the daily USD price of that token.
 -- Note: prices.day stores Solana mints as bytes — from_base58() converts the

@@ -1,7 +1,8 @@
 -- Q0: Solana DEX landscape — all projects by trade count and volume, H1 2026
 -- Purpose: verify date filter and identify project labels.
 -- Note: Jupiter is absent here — as an aggregator it routes through underlying
--- AMM pools (meteora, raydium, whirlpool), which are what this table records.
+-- DEX programs (e.g. Meteora, Raydium, Orca Whirlpool), which are what this
+-- table records.
 SELECT
     project,
     COUNT(*)                        AS total_trades,

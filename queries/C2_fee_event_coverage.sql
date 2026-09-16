@@ -3,7 +3,8 @@
 --   recorded Jupiter fee event. Q8 further filters this subset for pricing.
 --   C2 is fee-event coverage, not the final share of transactions used by Q8.
 -- Result: coverage ranges from 7.92% (Native Solana) to 0.51% (Cross-Chain
---   Asset) — a factor of 15. Other has none at all. Whether the covered subset
+--   Asset) — a factor of 15. Unmapped 1.55%, Tokenized RWA 1.54%.
+--   Other has none at all. Whether the covered subset
 --   is representative of each category cannot be established from this data.
 -- Note: transactions are assigned to a single category as in Q7 and Q8.
 WITH categories AS (
@@ -38,7 +39,8 @@ tx_fees AS (
     SELECT DISTINCT evt_tx_id
     FROM jupiter_v6_solana.jupiter_evt_feeevent
     WHERE evt_block_date >= DATE '2026-01-01'
-    )
+      AND evt_block_date <  DATE '2026-07-01'
+)
 SELECT
     t.category,
     COUNT(*)                                AS all_tx,

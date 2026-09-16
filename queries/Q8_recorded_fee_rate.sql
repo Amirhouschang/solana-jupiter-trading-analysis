@@ -17,8 +17,9 @@
 -- COVERAGE — read before interpreting the ratio
 -- Jupiter does not record a fee event on every route. The share of transactions
 -- carrying one varies sharply by category: 7.92% for Native Solana, 2.32% for
--- Liquid Staking, 1.36% for Stablecoin, 0.65% for Meme Coin, 0.51% for
--- Cross-Chain Asset, and none at all for Other (see C2).
+-- Liquid Staking, 1.55% for Unmapped, 1.54% for Tokenized RWA, 1.36% for
+-- Stablecoin, 0.65% for Meme Coin, 0.51% for Cross-Chain Asset, and none at all
+-- for Other (see C2).
 -- The ratio below therefore describes the transactions where a fee was recorded,
 -- not the category as a whole. Whether that subset is representative — and
 -- whether it is representative to the same degree across categories — cannot be
