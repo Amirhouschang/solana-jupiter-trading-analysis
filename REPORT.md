@@ -8,6 +8,10 @@ through each result in turn.
 **Period:** 1 January – 30 June 2026
 **Source:** `jupiter_v6_solana.*` on Dune Analytics
 
+The project now has two analytical layers. Part 1 measures swap-event execution.
+Part 2 reconstructs Jupiter route groups to separate final outputs from
+intermediate routing tokens.
+
 ---
 
 ## 1. Scale
@@ -134,9 +138,8 @@ that gets written about — meme coins, launchpads — is 11% of the trading.
 
 One qualification on that figure: categories are assigned from the output token
 of each swap event, and a route A → SOL → B records SOL as an output alongside B.
-The shares therefore describe execution activity rather than what traders set out
-to acquire, and the stablecoin and native Solana figures are likely inflated by
-an amount this analysis does not measure.
+The shares therefore describe execution activity rather than final route outputs.
+Part 2 measures this difference directly instead of assuming its size.
 
 **Meme coins reach more distinct wallets than stablecoins.** The manually
 verified meme coin group alone records 3.4 million distinct signers against 2.4
@@ -250,6 +253,10 @@ carry more swap events within that category than transactions assigned to meme
 coins. The metric was designed to measure liquidity fragmentation and does not
 do that.
 
+Part 2 later reconstructs route groups directly. That does not invalidate Q7:
+Q7 remains an event-per-transaction metric, while Q10–Q14 answer route-level
+questions that Q7 was not designed to answer.
+
 A note on how this was caught: the first version of the query returned 0.95 legs
 per swap for one category. That is mathematically impossible — the minimum is
 1.0. The impossible value exposed a counting error: transactions touching
@@ -360,7 +367,212 @@ conditions; a longer window is the obvious next step.
 
 ---
 
-## 8. Things found along the way
+## 8. Part 2 — final outputs versus intermediate routing
+
+Part 1 counts every swap-event `output_mint`. That is the right grain for
+execution activity, but it does not distinguish a token received at the end of a
+route from one used only as an intermediate hop. Part 2 was built to make that
+distinction explicit.
+
+### 8.1 The route grain had to be established first
+
+The route key used here is:
+
+`(evt_tx_id, evt_outer_instruction_index)`
+
+C4 inspected decoded Jupiter events and confirmed that the outer instruction
+index separates Jupiter invocations inside a transaction. One sampled
+transaction, for example, contains route groups at outer instruction indices 4
+and 5 rather than one undifferentiated transaction-level route.
+
+C5 then checked how often this matters over the test week
+**2–9 March 2026**:
+
+| Route groups in transaction | Transactions | Share |
+|---:|---:|---:|
+| 1 | 10,097,262 | 90.91% |
+| 2 | 1,009,231 | 9.09% |
+| 3 | 39 | 0.00% |
+| 4 | 4 | 0.00% |
+
+Most transactions contain one route group, but more than nine percent contain
+two. Treating one transaction as one Jupiter route would therefore merge
+distinct executions in a material number of cases.
+
+### 8.2 Final output is inferred from token roles
+
+For each route group, every mint is reduced to whether it appears as an input,
+an output, or both:
+
+- input but never output → start token
+- input and output → intermediate token
+- output but never input → final output token
+- no output-only token → circular / closed route
+
+This is a set-based definition. It does not require an assumption about decoded
+event order.
+
+### 8.3 Route types
+
+Q10 classifies all **284,716,882** H1 route groups with an operational,
+precedence-based rule: a route is `Circle` when it has no final token; a
+one-event route is `Simple`; repeated use of an input or output token is
+classified as `Split`; a remaining route with an intermediate token is
+`Multi-Hop`; everything else is `Simple`.
+
+![Jupiter route type distribution](images/route_type_distribution.png)
+
+| Route type | Route groups | Share |
+|---|---:|---:|
+| Simple | 166,652,857 | 58.53% |
+| Circle | 61,396,063 | 21.56% |
+| Multi-Hop | 55,103,293 | 19.35% |
+| Split | 1,564,669 | 0.55% |
+
+The labels describe event structure, not motive. In particular, `Circle` means
+that no output-only token exists under this role definition. It does **not**
+establish that the route was arbitrage.
+
+### 8.4 What changes when only final outputs are counted
+
+Q11 applies the same Q4 token mapping to output-only tokens. Circular routes do
+not enter this distribution because they have no final output under the
+definition above.
+
+| Category | Mapping | Final-output observations | Share |
+|---|---|---:|---:|
+| Native Solana | manual | 85,509,023 | 38.29% |
+| Stablecoin | manual | 69,913,352 | 31.31% |
+| Meme Coin | suffix | 24,575,948 | 11.00% |
+| Unmapped | unmapped | 19,592,386 | 8.77% |
+| Meme Coin | manual | 15,924,132 | 7.13% |
+| Cross-Chain Asset | manual | 5,773,455 | 2.59% |
+| Liquid Staking | manual | 1,005,525 | 0.45% |
+| Tokenized RWA | manual | 855,331 | 0.38% |
+| Other | manual | 173,207 | 0.08% |
+
+The total is **223,322,359 final-output-token observations**.
+
+Q12 puts these numbers beside the Part 1 event-output shares. For readability,
+the two meme-coin mapping methods are combined here:
+
+![All events vs final output](images/final_output_category_shift.png)
+
+| Category | All event outputs | Final output | Change |
+|---|---:|---:|---:|
+| Stablecoin | 39.33% | **31.31%** | **-8.02 pp** |
+| Native Solana | 38.13% | 38.29% | +0.16 pp |
+| Meme Coin | 10.98% | **18.13%** | **+7.15 pp** |
+| Unmapped | 5.95% | 8.77% | +2.82 pp |
+| Cross-Chain Asset | 3.91% | 2.59% | -1.32 pp |
+| Liquid Staking | 1.23% | 0.45% | -0.78 pp |
+| Tokenized RWA | 0.43% | 0.38% | -0.05 pp |
+| Other | 0.04% | 0.08% | +0.04 pp |
+
+This is the central result of Part 2. Stablecoins lose 8.02 percentage points
+when the measure moves from every event output to final-output observations,
+while meme coins gain 7.15 points. Native Solana is almost unchanged.
+
+Part 1 was therefore not numerically wrong. It answered a different question:
+which tokens appear as outputs during execution. The error would have been to
+read those event-level shares as if they were already final-output shares.
+
+### 8.5 Intermediate tokens explain why the two views differ
+
+Q14 asks which tokens appear on both sides of the same route and are therefore
+intermediate under the role definition. Its denominator is route groups
+containing at least one intermediate token.
+
+![Top 5 intermediate-hop tokens](images/top5_intermediate_tokens.png)
+
+| Rank | Token | Routes as intermediate | Share of routes with an intermediate token |
+|---:|---|---:|---:|
+| 1 | SOL/WSOL | 80,527,620 | 68.51% |
+| 2 | USDC | 69,484,526 | 59.12% |
+| 3 | USDT | 21,471,681 | 18.27% |
+| 4 | USD1 | 13,986,161 | 11.90% |
+| 5 | cbBTC | 4,217,544 | 3.59% |
+| 6 | JLP | 3,239,738 | 2.76% |
+| 7 | JitoSOL | 2,616,077 | 2.23% |
+| 8 | WETH | 2,482,598 | 2.11% |
+| 9 | Fartcoin | 2,461,874 | 2.09% |
+| 10 | USDG | 2,315,075 | 1.97% |
+| 11 | PUMP | 2,154,384 | 1.83% |
+| 12 | WBTC | 2,042,081 | 1.74% |
+| 13 | JUP | 1,851,419 | 1.58% |
+| 14 | TRUMP | 1,262,379 | 1.07% |
+| 15 | mSOL | 1,254,318 | 1.07% |
+| 16 | HYPE | 1,058,105 | 0.90% |
+| 17 | ZEC | 1,014,697 | 0.86% |
+| 18 | BONK | 879,545 | 0.75% |
+| 19 | xBTC | 790,368 | 0.67% |
+| 20 | PyUSD | 720,339 | 0.61% |
+
+![Top 20 intermediate-hop tokens](images/top20_intermediate_tokens.png)
+
+SOL/WSOL and USDC are far ahead of the rest. This directly establishes that they
+are common intermediate routing assets. The percentages are not meant to sum to
+100%: one route can contain several intermediate tokens.
+
+The Q12 shift is consistent with that routing role, especially for stablecoins.
+The analysis does not claim that intermediate routing alone explains every
+category-level change.
+
+### 8.6 Final-output composition also moves over time
+
+Q13 repeats the final-output classification by week. It contains 27 ISO week
+buckets, including the partial first and last weeks of H1 2026. The weekly shares
+sum to approximately 100% (99.98–100.02% after rounding), and the weekly counts
+sum to the same **223,322,359** final-output observations as Q11.
+
+For the two meme-coin mapping methods combined, the observed weekly ranges are:
+
+| Category | Min weekly final-output share | Max weekly final-output share |
+|---|---:|---:|
+| Native Solana | 31.20% | 51.57% |
+| Stablecoin | 19.90% | 42.18% |
+| Meme Coin | 10.31% | 29.42% |
+| Unmapped | 5.94% | 14.46% |
+| Cross-Chain Asset | 0.89% | 4.05% |
+| Liquid Staking | 0.08% | 1.35% |
+| Tokenized RWA | 0.10% | 2.72% |
+| Other | 0.01% | 0.28% |
+
+This is a final-output view, not the same measure as the Part 1 weekly event
+shares in Section 7. The two should not be compared as if they were identical
+metrics.
+
+### 8.7 The one-final-token assumption was checked, not assumed
+
+After Q10 and Q11 were compared, a small discrepancy appeared. Q10 contains
+**223,320,819 non-circular route groups** (284,716,882 total minus 61,396,063
+Circle), while Q11 contains **223,322,359 final-output observations** — exactly
+1,540 more.
+
+A full H1 validation counted final tokens per route:
+
+| Final tokens in route | Route groups | Final-output tokens |
+|---:|---:|---:|
+| 0 | 61,396,063 | 0 |
+| 1 | 223,319,337 | 223,319,337 |
+| 2 | 1,434 | 2,868 |
+| 3 | 38 | 114 |
+| 4 | 10 | 40 |
+
+Of the 223,320,819 non-circular route groups, only **1,482** have more than one
+final token — about **0.00066%**. Those routes generate exactly **1,540**
+additional final-output observations.
+
+The validation also returned no route group with a NULL
+`evt_outer_instruction_index`.
+
+The Q10/Q11 difference is therefore explained rather than ignored: Q10 counts
+route groups, while Q11 counts final-output-token observations. The latter
+should not be described as an exact one-final-token-per-route measure.
+
+---
+
+## 9. Things found along the way
 
 None of these were in the plan.
 
@@ -411,7 +623,7 @@ symbol-based classification would have counted it as a stablecoin and added
 
 ---
 
-## 9. What would come next
+## 10. What would come next
 
 - **A longer window.** Six months showed two dominant categories with moving
   shares; twelve or twenty-four would show whether that holds across a full
@@ -432,9 +644,6 @@ symbol-based classification would have counted it as a stablecoin and added
   of transactions depending on category. Establishing why some routes record a
   fee event and others do not would turn that section from an observation into a
   measurement.
-- **Separating final outputs from intermediate hops.** That would turn the
-  category shares from a picture of execution activity into a picture of trading
-  intent.
 
 ---
 
@@ -454,8 +663,19 @@ most when reading this report:
   counts are inflated by an unknown amount.
 - **Fee event coverage is narrow and uneven** — 0.51% to 7.92% depending on
   category; after pricing filters Q8 uses 0.12% to 7.85%.
-- **Intermediate hops count as outputs.** Category shares in sections 2 and 3
-  describe execution activity, not final trading intent.
+- **Part 1 event outputs include intermediate hops.** Category shares in
+  Sections 2, 3 and 7 describe execution activity. Part 2 separates output-only
+  final tokens from tokens used on both sides of a route.
+- **Final-output shares exclude circular / closed routes.** Q10 identifies
+  61,396,063 such route groups (21.56%); under the role definition they contain
+  no output-only token.
+- **A tiny number of non-circular routes have multiple final outputs.** The H1
+  validation found 1,482 such routes (about 0.00066% of non-circular route
+  groups), which create 1,540 additional final-output observations. Q11 therefore
+  counts final-output-token observations, not an assumed one-final-token-per-route
+  measure.
+- **Route-type labels are operational.** They describe decoded event structure.
+  A `Circle` classification does not establish arbitrage, motive or user intent.
 
 The analysis describes trading behaviour, not its causes. No causal claims.
 Not investment advice.

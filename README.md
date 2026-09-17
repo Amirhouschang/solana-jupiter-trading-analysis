@@ -7,18 +7,18 @@ the Solana DEX ecosystem. Built with SQL on Dune Analytics.
 **Period:** 1 January – 30 June 2026
 **Data:** `jupiter_v6_solana.*`, `prices.day`, `tokens_solana.fungible` on Dune
 
-## In short
-
-- **465M swap events in 268M transactions** routed through Jupiter v6 across 89 DEX programs in H1 2026.
-- **SOL leads by transactions, USDC by priced volume** — trade count and volume produce different leaders.
-- **Stablecoins and native Solana assets are 77.5% of all swap events**; meme coins are 11.0%.
-- **Stablecoin transactions carry more events than meme coin transactions** (1.55 vs 1.03 within the dominant category), the opposite of the initial hypothesis.
+**Structure:** Part 1 measures event-level execution. Part 2 reconstructs Jupiter
+route groups to separate final outputs from intermediate routing tokens.
 
 ---
 
 ## The question
 
 > What is actually traded through Jupiter, how is it executed, and what fees are recorded?
+
+Part 1 answers this from swap-event data. Part 2 asks the follow-up question that
+event-level outputs cannot answer on their own: *what remains as the final output
+of a route, and how does that differ from the tokens seen during execution?*
 
 Jupiter is not an exchange. It holds no liquidity of its own; it finds the best
 path for a swap across the underlying AMM programs. That makes it a single
@@ -73,6 +73,72 @@ Two results were not expected:
 
 *Weekly share of swap events per category. Each week sums to 100%, so shifts in
 behaviour are visible independently of changes in overall market size.*
+
+### Part 2 — Final outputs and route structure
+
+Part 1 counts every swap-event `output_mint`. That is the correct grain for
+execution activity, but a multi-hop route can record intermediate assets as
+outputs as well. Part 2 groups events by `(evt_tx_id, evt_outer_instruction_index)`
+and classifies token roles inside each route:
+
+- input but never output → start token
+- input and output → intermediate token
+- output but never input → final output token
+- no output-only token → circular / closed route
+
+This does not require assuming an event order. It uses the role each mint plays
+across the complete route group.
+
+![All events vs final output](images/final_output_category_shift.png)
+
+| Category | All event outputs | Final output observations | Change |
+|---|---:|---:|---:|
+| Stablecoin | 39.33% | **31.31%** | **-8.02 pp** |
+| Native Solana | 38.13% | 38.29% | +0.16 pp |
+| Meme Coin | 10.98% | **18.13%** | **+7.15 pp** |
+| Unmapped | 5.95% | 8.77% | +2.82 pp |
+| Cross-Chain Asset | 3.91% | 2.59% | -1.32 pp |
+| Liquid Staking | 1.23% | 0.45% | -0.78 pp |
+| Tokenized RWA | 0.43% | 0.38% | -0.05 pp |
+| Other | 0.04% | 0.08% | +0.04 pp |
+
+The picture changes materially. Stablecoins fall by 8.02 percentage points when
+only final-output observations are counted, while meme coins rise by 7.15 points.
+Native Solana is almost unchanged. Part 1 was therefore not wrong: it measured
+execution outputs. What would have been wrong was interpreting those event-level
+shares as the tokens traders ultimately received.
+
+Q14 provides a direct reason to expect a difference. Among route groups containing
+at least one intermediate token, SOL/WSOL appears as an intermediate in **68.51%**
+and USDC in **59.12%**, far ahead of USDT (18.27%) and USD1 (11.90%). Shares are
+not mutually exclusive because one route can contain several intermediate tokens.
+
+![Top 5 intermediate-hop tokens](images/top5_intermediate_tokens.png)
+
+The route structure itself is also mixed:
+
+![Jupiter route type distribution](images/route_type_distribution.png)
+
+| Route type | Route groups | Share |
+|---|---:|---:|
+| Simple | 166,652,857 | 58.53% |
+| Circle | 61,396,063 | 21.56% |
+| Multi-Hop | 55,103,293 | 19.35% |
+| Split | 1,564,669 | 0.55% |
+
+These are operational route classes derived from decoded swap events. `Circle`
+means that the route has no output-only token under the set-based role definition;
+it does **not** by itself establish arbitrage or user intent.
+
+Final-output category shares exclude those circular routes because they have no
+output-only token. A full-period validation also checked whether every remaining
+route has exactly one final token. Of **223,320,819 non-circular route groups**,
+223,319,337 had one final output token. Only **1,482 routes** had more than one:
+1,434 had two, 38 had three and 10 had four. That is about **0.00066%** of
+non-circular routes. These rare cases create exactly **1,540 additional
+final-output-token observations**, which explains why Q11 contains 223,322,359
+final outputs. No route group with a NULL `evt_outer_instruction_index` appeared
+in this validation.
 
 ---
 
@@ -195,6 +261,41 @@ tutorial. The result did not support the hypothesis behind it, and the metric
 turned out not to measure liquidity fragmentation directly, which made it more
 interesting rather than less.
 
+### 9. Event outputs were not necessarily final outputs
+
+The main limitation of Part 1 became the starting point for Part 2. In a route
+such as `A → USDC → SOL`, both USDC and SOL appear as event outputs, even though
+USDC is only an intermediate routing asset.
+
+C4 inspected the instruction indices directly. C5 then tested a full week
+(2–9 March 2026): 90.91% of transactions contained one route group, 9.09%
+contained two, and 43 transactions contained three or four. A transaction
+therefore cannot safely be treated as identical to one Jupiter route.
+
+The route key used in Part 2 is `(evt_tx_id, evt_outer_instruction_index)`.
+
+### 10. Final output was inferred from token roles, not event order
+
+Within each route, every mint is reduced to two flags: whether it appears as an
+input and whether it appears as an output. A token that appears only as output is
+a final output; one that appears on both sides is intermediate. A route with no
+output-only token is circular / closed under this definition.
+
+This set-based method avoids relying on the ordering of decoded events and makes
+the Part 1 versus Part 2 comparison directly reproducible.
+
+### 11. The final-output count was checked explicitly
+
+The full H1 validation accounted for all **284,716,882** route groups in Q10.
+There were 61,396,063 with zero final tokens, 223,319,337 with one, 1,434 with
+two, 38 with three and 10 with four.
+
+The 1,482 multi-final routes are only about 0.00066% of non-circular routes, but
+they matter for naming the metric correctly: Q11 counts **final-output-token
+observations**, not an assumed one-final-token-per-route measure. Their extra
+outputs explain the exact 1,540 difference between the 223,320,819 non-circular
+route groups and the 223,322,359 final-output observations.
+
 ---
 
 ## Method
@@ -215,6 +316,26 @@ as a `dim_asset` table in a star schema, applied to on-chain data.
 **Counting.** Event-level and transaction-level counts answer different questions
 and are labelled as such throughout. Where a transaction touches several
 categories, the treatment is stated per query.
+
+**Route grouping.** Part 2 groups decoded swap events by
+`(evt_tx_id, evt_outer_instruction_index)`. C4 checks the instruction structure;
+C5 confirms that a single transaction can contain more than one route group.
+
+**Final-output roles.** Within a route, input-only tokens are starts, tokens that
+appear as both input and output are intermediate, and output-only tokens are
+final outputs. Circular / closed routes have no output-only token and therefore
+do not enter the final-output category distribution.
+
+**Route types.** Q10 uses an operational classification: Circle when no final
+token exists; Simple for one-event routes; Split when an input or output token
+appears more than once within the route; Multi-Hop when an intermediate token is
+present; remaining routes are Simple. These labels describe the decoded event
+structure, not motive or user intent.
+
+**Final-output validation.** Across H1 2026, 223,319,337 non-circular route groups
+had exactly one final token and 1,482 had more than one. The latter produce 1,540
+extra final-output observations. The validation returned no NULL outer instruction
+index route groups.
 
 ---
 
@@ -240,6 +361,22 @@ categories, the treatment is stated per query.
 Chart variants (Q2a/b, Q3a/b, Q5a, Q6c/e) exist because the distributions are too
 skewed for a single readable chart. They add no logic of their own.
 
+### Part 2 queries
+
+| ID | Title | Role |
+|---|---|---|
+| C4 | Instruction Index Check — Route Grouping | Validates the route-grouping columns on decoded events |
+| C5 | Jupiter Transactions with Multiple Route Groups | Shows that one transaction can contain several route groups; one-week validation |
+| Q10 | Jupiter Route Type Distribution | Classifies route groups as Simple, Circle, Multi-Hop or Split |
+| Q11 | Category Shares by Final Output Token | Category distribution of final-output-token observations |
+| Q11 check | Final Output Tokens per Route — H1 2026 | Validates final-token cardinality and explains the Q10/Q11 count difference |
+| Q12 | All Events vs Final Output Category Shares | Measures how category shares change between Part 1 and Part 2 |
+| Q13 | Weekly Category Shares by Final Output Token | Weekly final-output category composition |
+| Q14 | Top Intermediate-Hop Tokens | Counts route groups in which each token acts as an intermediate |
+
+Chart/table variants Q12a, Q14a and Q14b contain no additional analytical logic;
+they reshape validated results for dashboard display.
+
 ---
 
 ## Limitations
@@ -257,10 +394,22 @@ skewed for a single readable chart. They add no logic of their own.
   coins**. Meme coin volume and fees are understated throughout.
 - Prices are daily closes, not execution-time prices. Adequate for ranking, not
   for precise valuation.
-- **Intermediate hops are counted as outputs.** A route A → SOL → B records SOL
-  as an output alongside B. Category shares therefore describe execution
-  activity, not what traders set out to acquire. Stablecoin and native Solana
-  shares are likely inflated by this, by an amount not measured here.
+- **Part 1 counts intermediate hops as outputs.** A route A → SOL → B records SOL
+  as an output alongside B, so the Part 1 category shares describe execution
+  activity. Part 2 measures the difference directly: Stablecoin share falls from
+  39.33% of event outputs to 31.31% of final-output observations, while combined
+  Meme Coin share rises from 10.98% to 18.13%.
+- **Final-output shares do not include circular / closed routes.** Q10 identifies
+  61,396,063 such route groups (21.56%); under the role-based definition they
+  contain no output-only token.
+- **A tiny number of non-circular routes have multiple final outputs.** The H1
+  validation found 1,482 such routes (about 0.00066% of non-circular route
+  groups), creating 1,540 additional final-output observations. Q11 therefore
+  counts final-output-token observations rather than assuming one final token per
+  route.
+- **Route types are operational classifications.** They describe the structure of
+  decoded events. In particular, a `Circle` label does not by itself establish
+  arbitrage, motive or user intent.
 - **Fee event coverage is narrow and uneven.** Jupiter does not record a fee
   event on every route. The share of transactions carrying one ranges from 7.92%
   (Native Solana) to 0.51% (Cross-Chain Asset), with none at all for Other — see
@@ -282,8 +431,8 @@ skewed for a single readable chart. They add no logic of their own.
 
 ## Use of AI
 
-This project was built with an AI assistant (Claude), and it is worth being
-precise about what that means rather than leaving it vague.
+This project was built with AI assistance, and it is worth being precise about
+what that means rather than leaving it vague.
 
 **What the AI did:**
 
@@ -292,7 +441,9 @@ precise about what that means rather than leaving it vague.
 - Suggested the query structure and the order of work
 - Diagnosed errors — the duplicate-column trap, the type mismatch on the price
   join, the wrong counting grain in the first version of Q7
-- Drafted the dashboard text and this README
+- Helped build and validate the Part 2 route-reconstruction queries, including
+  tracing the 1,540-count difference between non-circular routes and final outputs
+- Drafted dashboard and documentation text
 
 **What the AI did not do:**
 
@@ -329,7 +480,11 @@ solana-jupiter-trading-analysis/
 │   ├── routing_complexity.png
 │   ├── top5_by_trade_count.png
 │   ├── top5_by_volume.png
-│   └── top5_dex_programs.png
+│   ├── top5_dex_programs.png
+│   ├── final_output_category_shift.png
+│   ├── route_type_distribution.png
+│   ├── top5_intermediate_tokens.png
+│   └── top20_intermediate_tokens.png
 └── queries/
     ├── Q0_solana_dex_landscape.sql
     ├── C1_coverage_check.sql
@@ -351,7 +506,18 @@ solana-jupiter-trading-analysis/
     ├── Q6e_dex_programs_table.sql
     ├── Q7_routing_complexity.sql
     ├── Q8_recorded_fee_rate.sql
-    └── Q9_category_composition_over_time.sql
+    ├── Q9_category_composition_over_time.sql
+    ├── C4_route_grouping_check.sql
+    ├── C5_transactions_with_multiple_route_groups.sql
+    ├── Q10_route_type_distribution.sql
+    ├── Q11_category_shares_final_output.sql
+    ├── Q11_check_final_output_tokens_per_route_h1.sql
+    ├── Q12_all_events_vs_final_output.sql
+    ├── Q12a_all_events_vs_final_output_chart.sql
+    ├── Q13_weekly_final_output_category_shares.sql
+    ├── Q14_top_intermediate_hop_tokens.sql
+    ├── Q14a_top_intermediate_hop_tokens_chart.sql
+    └── Q14b_top5_intermediate_hop_tokens.sql
 ```
 
 Each query file is self-contained: the header comments state purpose, scope,
@@ -363,3 +529,11 @@ queries.
 
 **Detailed findings:** [REPORT.md](REPORT.md) — every result walked through with
 the charts, including what was found along the way and what would come next.
+
+### Related project
+
+The stored Dune results are also used in a separate data-engineering / BI project:
+
+**Dune API → Python → CSV → Power BI**
+
+[Dune API Pipeline](https://github.com/Amirhouschang/dune-api-pipeline)
