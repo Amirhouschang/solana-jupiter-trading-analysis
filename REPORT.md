@@ -508,8 +508,6 @@ containing at least one intermediate token.
 | 19 | xBTC | 790,368 | 0.67% |
 | 20 | PyUSD | 720,339 | 0.61% |
 
-![Top 20 intermediate-hop tokens](images/top20_intermediate_tokens.png)
-
 SOL/WSOL and USDC are far ahead of the rest. This directly establishes that they
 are common intermediate routing assets. The percentages are not meant to sum to
 100%: one route can contain several intermediate tokens.
