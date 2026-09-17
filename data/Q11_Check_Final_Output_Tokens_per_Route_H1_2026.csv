@@ -1,0 +1,6 @@
+outer_index_status,final_token_count,route_groups,final_output_tokens
+Non-NULL outer index,0,61396063,0
+Non-NULL outer index,1,223319337,223319337
+Non-NULL outer index,2,1434,2868
+Non-NULL outer index,3,38,114
+Non-NULL outer index,4,10,40

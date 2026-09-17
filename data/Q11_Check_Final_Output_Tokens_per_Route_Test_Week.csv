@@ -1,0 +1,10 @@
+category,mapping_method,final_routes,share_of_final_routes_pct
+Native Solana,manual,85509023,38.290000000000000
+Stablecoin,manual,69913352,31.310000000000000
+Meme Coin,suffix,24575948,11.000000000000000
+Unmapped,unmapped,19592386,8.770000000000000
+Meme Coin,manual,15924132,7.130000000000000
+Cross-Chain Asset,manual,5773455,2.590000000000000
+Liquid Staking,manual,1005525,0.450000000000000
+Tokenized RWA,manual,855331,0.380000000000000
+Other,manual,173207,0.080000000000000

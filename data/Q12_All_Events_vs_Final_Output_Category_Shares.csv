@@ -1,0 +1,10 @@
+category,mapping_method,all_events_share_pct,final_output_share_pct,delta_percentage_points
+Stablecoin,manual,39.33,31.31,-8.02
+Meme Coin,suffix,5.93,11.00,5.07
+Unmapped,unmapped,5.95,8.77,2.82
+Meme Coin,manual,5.05,7.13,2.08
+Cross-Chain Asset,manual,3.91,2.59,-1.32
+Liquid Staking,manual,1.23,0.45,-0.78
+Native Solana,manual,38.13,38.29,0.16
+Tokenized RWA,manual,0.43,0.38,-0.05
+Other,manual,0.04,0.08,0.04
