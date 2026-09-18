@@ -95,7 +95,7 @@ across the complete route group.
 |---|---:|---:|---:|
 | Stablecoin | 39.33% | **31.31%** | **-8.02 pp** |
 | Native Solana | 38.13% | 38.29% | +0.16 pp |
-| Meme Coin | 10.98% | **18.13%** | **+7.15 pp** |
+| Meme Coin | 10.98% | **18.14%** | **+7.16 pp** |
 | Unmapped | 5.95% | 8.77% | +2.82 pp |
 | Cross-Chain Asset | 3.91% | 2.59% | -1.32 pp |
 | Liquid Staking | 1.23% | 0.45% | -0.78 pp |
@@ -103,7 +103,7 @@ across the complete route group.
 | Other | 0.04% | 0.08% | +0.04 pp |
 
 The picture changes materially. Stablecoins fall by 8.02 percentage points when
-only final-output observations are counted, while meme coins rise by 7.15 points.
+only final-output observations are counted, while meme coins rise by 7.16 points.
 Native Solana is almost unchanged. Part 1 was therefore not wrong: it measured
 execution outputs. What would have been wrong was interpreting those event-level
 shares as the tokens traders ultimately received.
@@ -398,7 +398,7 @@ they reshape validated results for dashboard display.
   as an output alongside B, so the Part 1 category shares describe execution
   activity. Part 2 measures the difference directly: Stablecoin share falls from
   39.33% of event outputs to 31.31% of final-output observations, while combined
-  Meme Coin share rises from 10.98% to 18.13%.
+  Meme Coin share rises from 10.98% to 18.14%.
 - **Final-output shares do not include circular / closed routes.** Q10 identifies
   61,396,063 such route groups (21.56%); under the role-based definition they
   contain no output-only token.
