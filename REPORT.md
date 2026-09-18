@@ -462,7 +462,7 @@ the two meme-coin mapping methods are combined here:
 |---|---:|---:|---:|
 | Stablecoin | 39.33% | **31.31%** | **-8.02 pp** |
 | Native Solana | 38.13% | 38.29% | +0.16 pp |
-| Meme Coin | 10.98% | **18.13%** | **+7.15 pp** |
+| Meme Coin | 10.98% | **18.14%** | **+7.16 pp** |
 | Unmapped | 5.95% | 8.77% | +2.82 pp |
 | Cross-Chain Asset | 3.91% | 2.59% | -1.32 pp |
 | Liquid Staking | 1.23% | 0.45% | -0.78 pp |
@@ -471,7 +471,7 @@ the two meme-coin mapping methods are combined here:
 
 This is the central result of Part 2. Stablecoins lose 8.02 percentage points
 when the measure moves from every event output to final-output observations,
-while meme coins gain 7.15 points. Native Solana is almost unchanged.
+while meme coins gain 7.16 points. Native Solana is almost unchanged.
 
 Part 1 was therefore not numerically wrong. It answered a different question:
 which tokens appear as outputs during execution. The error would have been to
