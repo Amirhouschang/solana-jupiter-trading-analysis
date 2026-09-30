@@ -59,7 +59,7 @@ begins.
 The top four are SOL and three stablecoins. Position five drops to under
 6 million — a factor of 26 below the leader. The distribution is extremely
 skewed, which is why the charts in this project are split rather than crammed
-into one axis. Transaction counts are `approx_distinct` estimates (~2% error);
+into one axis. Transaction counts are `approx_distinct` estimates (~2% standard error; individual tokens deviate by up to about 6%);
 ranks are ordered by exact swap events.
 
 ### By priced swap-event output volume
@@ -239,7 +239,7 @@ carry the most dominant-category events, meme-coin-assigned transactions almost
 the fewest (only Other is lower).
 
 Section 4 offers a possible explanation. Stablecoins appear across 75 of the 89
-DEX programs, meme coins across 23 to 34. Note that these are programs, not
+DEX programs, meme coins across 23 (suffix-matched) and 34 (manually mapped). Note that these are programs, not
 individual pools — pool-level detail is not available in this table.
 
 One hypothesis for this is that where more venues exist, Jupiter has more to
@@ -386,7 +386,7 @@ transaction, for example, contains route groups at outer instruction indices 4
 and 5 rather than one undifferentiated transaction-level route.
 
 C5 then checked how often this matters over the test week
-**2–9 March 2026**:
+**2–8 March 2026**:
 
 | Route groups in transaction | Transactions | Share |
 |---:|---:|---:|
