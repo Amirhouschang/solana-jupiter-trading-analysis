@@ -456,8 +456,6 @@ The total is **223,322,359 final-output-token observations**.
 Q12 puts these numbers beside the Part 1 event-output shares. For readability,
 the two meme-coin mapping methods are combined here:
 
-![All events vs final output](images/final_output_category_shift.png)
-
 | Category | All event outputs | Final output | Change |
 |---|---:|---:|---:|
 | Stablecoin | 39.33% | **31.31%** | **-8.02 pp** |

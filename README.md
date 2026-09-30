@@ -90,8 +90,6 @@ and classifies token roles inside each route:
 This does not require assuming an event order. It uses the role each mint plays
 across the complete route group.
 
-![All events vs final output](images/final_output_category_shift.png)
-
 | Category | All event outputs | Final output observations | Change |
 |---|---:|---:|---:|
 | Stablecoin | 39.33% | **31.31%** | **-8.02 pp** |
