@@ -1,5 +1,5 @@
 -- Q14: Top intermediate-hop tokens
--- Test period: one week
+-- Period: H1 2026
 -- Grain: token within a Jupiter route group
 -- Route key: evt_tx_id + evt_outer_instruction_index
 --
