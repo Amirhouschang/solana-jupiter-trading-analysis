@@ -8,7 +8,7 @@ WITH comparison(category, all_events_share_pct, final_output_share_pct) AS (
     VALUES
         ('Stablecoin',        39.33, 31.31),
         ('Native Solana',     38.13, 38.29),
-        ('Meme Coin',         10.98, 18.13),
+        ('Meme Coin',         10.98, 18.14),
         ('Unmapped',           5.95,  8.77),
         ('Cross-Chain Asset',  3.91,  2.59),
         ('Liquid Staking',     1.23,  0.45),
