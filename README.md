@@ -59,7 +59,8 @@ Two results were not expected:
   almost the fewest.** Transactions assigned to stablecoins average 1.55 events
   within their dominant category, meme coins 1.03. The initial hypothesis
   expected the opposite. Stablecoin outputs appear on about 75 of the 89 DEX
-  programs, meme coin outputs on about 23–34. Whether that explains the gap, or
+  programs; meme coin outputs on about 23 (suffix-matched) and 34 (manually
+  mapped), counted separately. Whether that explains the gap, or
   whether orders are actually split for a better price, is not established by
   this data.
 - **The two largest categories stayed dominant, but shares moved.**
@@ -268,7 +269,7 @@ such as `A → USDC → SOL`, both USDC and SOL appear as event outputs, even th
 USDC is only an intermediate routing asset.
 
 C4 inspected the instruction indices directly. C5 then tested a full week
-(2–9 March 2026): 90.91% of transactions contained one route group, 9.09%
+(2–8 March 2026): 90.91% of transactions contained one route group, 9.09%
 contained two, and 43 transactions contained three or four. A transaction
 therefore cannot safely be treated as identical to one Jupiter route.
 
@@ -387,8 +388,9 @@ they reshape validated results for dashboard display.
 - Categorisation is an analytical judgement, not an official taxonomy. It is
   published as Q4 and can be checked line by line.
 - `Unmapped` covers 5.9% of swap events and is always reported.
-- `approx_distinct()` is used where exact counts time out. Roughly 2% error; at
-  small counts an estimate can exceed the exact event count.
+- `approx_distinct()` is used where exact counts time out. Roughly 2% standard error;
+  individual estimates can deviate more (in Q2, `user_swaps` exceeds the exact
+  `swap_events` for 52 of 100 tokens, by up to 6%).
 - **Price coverage is uneven:** 100% for liquid staking, 89% for native Solana,
   82% for stablecoins, 67% for cross-chain and RWA, but only **24% for meme
   coins**. Meme coin volume and fees are understated throughout.
@@ -472,6 +474,7 @@ responsible for whether it is right.
 solana-jupiter-trading-analysis/
 ├── README.md
 ├── REPORT.md
+├── data/                 # CSV exports of the query results
 ├── images/
 │   ├── category_breakdown.png
 │   ├── category_over_time.png
@@ -483,8 +486,7 @@ solana-jupiter-trading-analysis/
 │   ├── top5_dex_programs.png
 │   ├── final_output_category_shift.png
 │   ├── route_type_distribution.png
-│   ├── top5_intermediate_tokens.png
-│   └── top20_intermediate_tokens.png
+│   └── top5_intermediate_tokens.png
 └── queries/
     ├── Q0_solana_dex_landscape.sql
     ├── C1_coverage_check.sql
@@ -508,9 +510,9 @@ solana-jupiter-trading-analysis/
     ├── Q8_recorded_fee_rate.sql
     ├── Q9_category_composition_over_time.sql
     ├── C4_route_grouping_check.sql
-    ├── C5_transactions_with_multiple_route_groups.sql
+    ├── C5_multiple_route_groups.sql
     ├── Q10_route_type_distribution.sql
-    ├── Q11_category_shares_final_output.sql
+    ├── Q11_check_final_output_tokens.sql
     ├── Q11_check_final_output_tokens_per_route_h1.sql
     ├── Q12_all_events_vs_final_output.sql
     ├── Q12a_all_events_vs_final_output_chart.sql
@@ -520,9 +522,9 @@ solana-jupiter-trading-analysis/
     └── Q14b_top5_intermediate_hop_tokens.sql
 ```
 
-Each query file is self-contained: the header comments state purpose, scope,
-counting method and known caveats. The file contents are identical to what runs
-on Dune.
+Each query file states purpose, scope, counting method and known caveats in its
+header. Some queries depend on other saved Dune queries (`query_<id>`). The file
+contents are identical to what runs on Dune.
 
 The CSV exports of the query results are in the repository alongside the
 queries.
