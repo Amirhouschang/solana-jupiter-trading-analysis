@@ -1,5 +1,5 @@
 -- Q13: Weekly category shares by final output token
--- Test period: one week
+-- Period: H1 2026
 -- Grain: one Jupiter route group with a final output token
 -- Route key: evt_tx_id + evt_outer_instruction_index
 --
