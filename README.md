@@ -482,7 +482,6 @@ solana-jupiter-trading-analysis/
 │   ├── top5_by_trade_count.png
 │   ├── top5_by_volume.png
 │   ├── top5_dex_programs.png
-│   ├── final_output_category_shift.png
 │   ├── route_type_distribution.png
 │   └── top5_intermediate_tokens.png
 └── queries/
