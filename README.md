@@ -536,3 +536,9 @@ The stored Dune results are also used in a separate data-engineering / BI projec
 **Dune API → Python → CSV → Power BI**
 
 [Dune API Pipeline](https://github.com/Amirhouschang/dune-api-pipeline)
+
+---
+
+## Rights
+
+© 2026 Amirhoushang Rahmannejad. All rights reserved. You are welcome to read and review this project. Copying, modifying or redistributing it requires my written permission.
